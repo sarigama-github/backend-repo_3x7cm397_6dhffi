@@ -1,48 +1,63 @@
 """
-Database Schemas
-
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
+Database Schemas for AgroVault (MongoDB collections)
 
 Each Pydantic model represents a collection in your database.
 Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+- User -> "user"
+- Warehouse -> "warehouse"
+- Croptype -> "croptype"
+- Receipt -> "receipt"
+- Loan -> "loan"
+- Farmerprofile -> "farmerprofile"
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from typing import Optional, Literal, List
+from datetime import datetime
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    name: str
+    email: str
+    phone: str
+    passwordHash: str
+    role: Literal["farmer", "operator", "banker", "admin"]
+    is_active: bool = True
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class FarmerProfile(BaseModel):
+    userId: str
+    village: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    govIdOptional: Optional[str] = None
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Warehouse(BaseModel):
+    name: str
+    locationText: str
+    contactPerson: str
+    phone: str
+    operatorId: Optional[str] = None  # link operator user
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class CropType(BaseModel):
+    name: str
+    varietyOptional: Optional[str] = None
+
+class Receipt(BaseModel):
+    receiptCode: str
+    farmerId: str
+    warehouseId: str
+    cropTypeId: str
+    quantity: float
+    grade: str
+    status: Literal["stored", "pledged", "partially_sold", "sold", "released"] = "stored"
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
+    history: Optional[List[dict]] = []
+
+class Loan(BaseModel):
+    receiptId: str
+    bankerId: str
+    principalAmount: float
+    interestRate: float
+    status: Literal["active", "repaid", "defaulted"] = "active"
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
